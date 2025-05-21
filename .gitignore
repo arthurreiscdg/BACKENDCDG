@@ -1,0 +1,97 @@
+# Sistema CDG - Arquivo de exclusão do Git
+
+# Arquivos de ambiente e configuração
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Arquivos de Runtime
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Dependências
+node_modules/
+jspm_packages/
+web_modules/
+.pnp
+.pnp.js
+
+# Arquivos de cache
+.npm
+.eslintcache
+.node_repl_history
+.yarn-integrity
+.parcel-cache
+
+# Arquivos de banco de dados
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.db
+*.sql
+
+# Arquivos temporários
+tmp/
+temp/
+.cache/
+.DS_Store
+Thumbs.db
+
+# Arquivos de build / distribuição
+dist/
+build/
+coverage/
+.nyc_output/
+*.tgz
+
+# Arquivos específicos do VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Arquivos específicos do Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Arquivos do sistema operacional
+Desktop.ini
+$RECYCLE.BIN/
+ehthumbs.db
+Icon?
+
+# Certificados e chaves de segurança
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+
+# Arquivos específicos do projeto
+uploads/
+arquivos_temp/
+api_logs.txt

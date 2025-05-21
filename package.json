@@ -1,0 +1,30 @@
+{
+  "name": "systemcdg",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "db:sync": "node ./scripts/syncDatabase.js",
+    "db:reset": "node ./scripts/syncDatabase.js --force",
+    "db:update": "node ./scripts/syncDatabase.js --alter",
+    "create:user": "node ./scripts/criarUsuarioTeste.js",
+    "test:integracao": "node ./scripts/testarIntegracao.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Sistema de autenticação e gestão CDG",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "sequelize": "^6.31.0",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
