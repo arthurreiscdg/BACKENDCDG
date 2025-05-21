@@ -416,7 +416,7 @@ const integracaoController = {
  */
 function verificarChaveApi(apiKey) {
   // A chave de API deve ser configurada no .env
-  const chaveValida = process.env.INTEGRACAO_API_KEY;
+  const chaveValida = process.env.API_KEY;
   
   if (!chaveValida) {
     console.error("Chave de API não configurada no arquivo .env");

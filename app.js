@@ -56,8 +56,8 @@ function configurarRotas(app) {
  */
 async function iniciarServidor(app) {
   try {
-    // Obtém a porta do arquivo .env ou usa 3000 como padrão
-    const PORT = process.env.PORT || 3000;
+    // Obtém a porta do arquivo
+    const PORT = process.env.API_PORT;
     
     // Inicia o servidor
     app.listen(PORT, () => {
