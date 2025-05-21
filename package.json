@@ -10,13 +10,17 @@
     "db:reset": "node ./scripts/syncDatabase.js --force",
     "db:update": "node ./scripts/syncDatabase.js --alter",
     "create:user": "node ./scripts/criarUsuarioTeste.js",
-    "test:integracao": "node ./scripts/testarIntegracao.js"
+    "test:integracao": "node ./scripts/testarIntegracao.js",
+    "webhook:criar": "node ./scripts/gerenciarWebhooks.js --criar",
+    "webhook:listar": "node ./scripts/gerenciarWebhooks.js --listar",
+    "webhook:testar": "node ./scripts/gerenciarWebhooks.js --testar"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "Sistema de autenticação e gestão CDG",
   "dependencies": {
+    "axios": "^1.9.0",
     "bcrypt": "^5.1.0",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",

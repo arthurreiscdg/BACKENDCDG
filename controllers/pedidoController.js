@@ -1,6 +1,7 @@
 const Pedido = require("../models/pedido");
 const StatusPedido = require("../models/statusPedido");
 const HistoricoStatus = require("../models/historicoStatus");
+const webhookService = require("../services/webhookService");
 
 /**
  * Controller para operações relacionadas a pedidos
@@ -246,6 +247,15 @@ async function atualizarStatusPedido(pedido, status_id, observacao) {
   });
   
   pedido.status_id = status_id;
+  await pedido.save();
+  
+  // Notifica a mudança de status via webhook
+  try {
+    await webhookService.notificarAtualizacaoStatus(pedido, status_id);
+  } catch (error) {
+    console.error("Erro ao notificar webhook:", error);
+    // Não impede a continuação em caso de erro no webhook
+  }
 }
 
 /**
