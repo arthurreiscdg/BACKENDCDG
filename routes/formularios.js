@@ -25,6 +25,12 @@ function definirRotasConsulta(router) {
   
   // Obter um formulário específico
   router.get("/:id", formularioController.obterFormulario);
+  
+  // Obter arquivos PDF de um formulário
+  router.get("/:id/arquivos", formularioController.obterArquivosFormulario);
+  
+  // Obter unidades de um formulário
+  router.get("/:id/unidades", formularioController.obterUnidadesFormulario);
 }
 
 /**
@@ -40,6 +46,15 @@ function definirRotasManipulacao(router) {
   
   // Excluir um formulário
   router.delete("/:id", formularioController.excluirFormulario);
+  
+  // Adicionar arquivos PDF a um formulário
+  router.post("/:id/arquivos", formularioController.adicionarArquivoFormulario);
+  
+  // Excluir um arquivo PDF de um formulário
+  router.delete("/:formularioId/arquivos/:arquivoId", formularioController.excluirArquivoFormulario);
+  
+  // Gerenciar unidades de um formulário
+  router.post("/:id/unidades", formularioController.gerenciarUnidadesFormulario);
 }
 
 module.exports = configurarRotasFormularios();
