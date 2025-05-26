@@ -11,19 +11,38 @@ class GoogleDriveService {
   constructor() {
     this.drive = null;
     this.initialized = false;
-  }
-
-  /**
+  }  /**
    * Inicializa a conexão com a API do Google Drive
    * @throws {Error} Se houver erro na inicialização
    */
   async initialize() {
     try {
+      console.log('Inicializando serviço do Google Drive com credenciais do .env');
+      
+      // Obter credenciais do arquivo .env
+      const credentials = process.env.CREDENTIALS;
+      
+      if (!credentials) {
+        throw new Error('Credenciais do Google Drive não encontradas no .env');
+      }
+      
+      let parsedCredentials;
+      try {
+        // Analisar as credenciais como objeto JSON
+        parsedCredentials = typeof credentials === 'string' ? JSON.parse(credentials) : credentials;
+      } catch (parseError) {
+        throw new Error(`Erro ao analisar credenciais: ${parseError.message}`);
+      }
+      
+      console.log('Credenciais do Google Drive carregadas com sucesso');
+      
       // Criar cliente de autenticação com as credenciais
-      const auth = new google.auth.GoogleAuth({
-        keyFile: process.env.GOOGLE_DRIVE_CREDENTIALS_PATH,
-        scopes: ['https://www.googleapis.com/auth/drive']
-      });
+      const auth = new google.auth.JWT(
+        parsedCredentials.client_email,
+        null,
+        parsedCredentials.private_key,
+        ['https://www.googleapis.com/auth/drive']
+      );
 
       // Criar instância da API Drive
       this.drive = google.drive({
@@ -35,7 +54,7 @@ class GoogleDriveService {
       console.log('Serviço do Google Drive inicializado com sucesso');
     } catch (error) {
       console.error('Erro ao inicializar serviço do Google Drive:', error);
-      throw new Error('Falha ao inicializar serviço do Google Drive');
+      throw new Error(`Falha ao inicializar serviço do Google Drive: ${error.message}`);
     }
   }
 
