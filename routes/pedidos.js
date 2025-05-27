@@ -1,5 +1,13 @@
 const express = require("express");
 const pedidoController = require("../controllers/pedidoController");
+const { 
+  verificarPermissaoPedido, 
+  verificarPermissaoAlterarStatus,
+  verificarPermissaoBaixarPedidos, 
+  verificarPermissaoBaixarEtiquetas
+} = require("../controllers/pedidoMiddleware");
+const { verificarRole } = require('../auth/permissaoMiddleware');
+const { filtrarPorEscola } = require('../auth/escolaMiddleware');
 
 /**
  * Configuração das rotas de pedidos
@@ -8,9 +16,12 @@ const pedidoController = require("../controllers/pedidoController");
 function configurarRotasPedidos() {
   const router = express.Router();
   
-  // Configuração das rotas
+  // Middleware para filtrar pedidos por escola, se aplicável
+  router.use(filtrarPorEscola);
+    // Configuração das rotas
   definirRotasConsulta(router);
   definirRotasManipulacao(router);
+  definirRotasEspeciais(router);
   
   return router;
 }
@@ -20,11 +31,11 @@ function configurarRotasPedidos() {
  * @param {express.Router} router - Router do Express
  */
 function definirRotasConsulta(router) {
-  // Listar todos os pedidos
-  router.get("/", pedidoController.listarPedidos);
+  // Listar todos os pedidos (filtrado automaticamente para escolas)
+  router.get("/", verificarPermissaoPedido, pedidoController.listarPedidos);
   
   // Obter um pedido específico
-  router.get("/:id", pedidoController.obterPedido);
+  router.get("/:id", verificarPermissaoPedido, pedidoController.obterPedido);
 }
 
 /**
@@ -32,14 +43,35 @@ function definirRotasConsulta(router) {
  * @param {express.Router} router - Router do Express
  */
 function definirRotasManipulacao(router) {
-  // Criar um novo pedido
-  router.post("/", pedidoController.criarPedido);
+  // Criar um novo pedido (admin, dev, gerente, usuário)
+  router.post("/", verificarRole(['admin', 'dev', 'gerente', 'usuario']), pedidoController.criarPedido);
+    // Atualizar um pedido (admin, dev, gerente)
+  router.put("/:id", verificarRole(['admin', 'dev', 'gerente']), pedidoController.atualizarPedido);
   
-  // Atualizar um pedido
-  router.put("/:id", pedidoController.atualizarPedido);
+  // Excluir um pedido (apenas admin e dev)
+  router.delete("/:id", verificarRole(['admin', 'dev']), pedidoController.excluirPedido);
+  
+  // Alterar status de um pedido (admin, dev, gerente, usuário, expedição - com restrições)
+  router.put("/:id/status", verificarPermissaoAlterarStatus, pedidoController.alterarStatus);
   
   // Excluir um pedido
   router.delete("/:id", pedidoController.excluirPedido);
 }
 
+/**
+ * Define rotas especiais para recursos específicos
+ * @param {express.Router} router - Router do Express
+ */
+function definirRotasEspeciais(router) {
+  // Baixar pedidos (admin, dev, gerente, usuário)
+  router.get("/baixar/relatorio", verificarPermissaoBaixarPedidos, pedidoController.baixarRelatorio);
+  
+  // Baixar etiquetas (admin, dev, gerente, expedição)
+  router.get("/baixar/etiquetas", verificarPermissaoBaixarEtiquetas, pedidoController.baixarEtiquetas);
+  
+  // Estatísticas de pedidos (admin, dev, gerente)
+  router.get("/estatisticas/resumo", verificarRole(['admin', 'dev', 'gerente']), pedidoController.obterEstatisticas);
+}
+
+// Exporta o router configurado
 module.exports = configurarRotasPedidos();

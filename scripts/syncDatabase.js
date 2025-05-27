@@ -5,21 +5,15 @@
  */
 require("dotenv").config();
 const sequelize = require("../config/database");
-const Usuario = require("../models/usuario");
-const StatusPedido = require("../models/statusPedido");
-const Pedido = require("../models/pedido");
-const HistoricoStatus = require("../models/historicoStatus");
-const Formulario = require("../models/formulario");
-const ArquivoPdf = require("../models/arquivoPdf");
-const Webhook = require("../models/webhook");
-const Unidade = require("../models/unidade");
+// Importamos o arquivo de índice que contém todos os modelos
+const models = require("../models/index");
 
 /**
  * Importa todos os modelos para garantir que sejam registrados
  */
 const importarModelos = () => {
-  // Modelos já importados acima
-  console.log("Modelos importados com sucesso");
+  // Modelos já importados do arquivo index.js
+  console.log("Modelos importados com sucesso:", Object.keys(models).join(", "));
 };
 
 /**

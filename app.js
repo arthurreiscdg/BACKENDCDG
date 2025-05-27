@@ -11,6 +11,7 @@ const pedidoRoutes = require("./routes/pedidos");
 const formularioRoutes = require("./routes/formularios");
 const integracaoRoutes = require("./routes/integracao");
 const webhookRoutes = require("./routes/webhooks");
+const usuarioRoutes = require("./routes/usuarios");
 
 /**
  * Configuração e inicialização do Express
@@ -58,6 +59,7 @@ function configurarRotas(app) {
   app.use("/api/formularios", authMiddleware(), formularioRoutes);
   app.use("/api/integracao", integracaoRoutes);
   app.use("/api/webhooks", authMiddleware(), webhookRoutes);
+  app.use("/api/usuarios", authMiddleware(), usuarioRoutes);
 }
 
 /**
