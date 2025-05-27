@@ -1,5 +1,67 @@
 const { Usuario, Permissao } = require('../models');
-const { ROLES_PADRAO, MAPEAMENTO_ROLE_PERMISSAO } = require('../scripts/inicializarPermissoes');
+
+/**
+ * Roles padrão do sistema
+ */
+const ROLES_PADRAO = {
+  admin: ["admin"],                // Permissão total do sistema
+  usuario: ["usuario"],            // PCP, baixar pedidos
+  dev: ["dev"],                    // Integrações e API e acesso total ao sistema
+  gerente: ["gerente"],            // Consultas e alteração de status
+  expedicao: ["expedicao"],        // Pode baixar etiquetas e alterar status para enviado
+  escola: ["escola"],              // Cada escola vai ter acesso somente a sua área
+  visitante: ["visitante"]         // Apenas visualização
+};
+
+/**
+ * Mapeia permissões para cada role
+ */
+const MAPEAMENTO_ROLE_PERMISSAO = {
+  // Admin - Permissão total do sistema
+  admin: [
+    "pedidos.visualizar", "pedidos.editar", "pedidos.excluir", "pedidos.baixar", "pedidos.alterar_status", "pedidos.baixar_etiquetas",
+    "formularios.visualizar", "formularios.editar", "formularios.excluir", 
+    "usuarios.visualizar", "usuarios.editar", "usuarios.excluir", 
+    "webhooks.gerenciar", "integracoes.gerenciar", "api.acessar"
+  ],
+  
+  // Dev - Integrações e API e acesso total ao sistema
+  dev: [
+    "pedidos.visualizar", "pedidos.editar", "pedidos.excluir", "pedidos.baixar", "pedidos.alterar_status", "pedidos.baixar_etiquetas",
+    "formularios.visualizar", "formularios.editar", "formularios.excluir", 
+    "usuarios.visualizar", "usuarios.editar",
+    "webhooks.gerenciar", "integracoes.gerenciar", "api.acessar"
+  ],
+  
+  // Gerente - Consultas e alteração de status
+  gerente: [
+    "pedidos.visualizar", "pedidos.alterar_status", "pedidos.baixar", 
+    "formularios.visualizar", "formularios.editar", 
+    "usuarios.visualizar"
+  ],
+  
+  // Usuário (PCP) - Baixar pedidos
+  usuario: [
+    "pedidos.visualizar", "pedidos.baixar", "pedidos.alterar_status",
+    "formularios.visualizar"
+  ],
+  
+  // Expedição - Baixar etiquetas e alterar status para enviado
+  expedicao: [
+    "pedidos.visualizar", "pedidos.baixar_etiquetas", "pedidos.alterar_status"
+  ],
+  
+  // Escola - Acesso somente a sua área
+  escola: [
+    "pedidos.visualizar_especifico"
+  ],
+  
+  // Visitante - Apenas visualização
+  visitante: [
+    "pedidos.visualizar",
+    "formularios.visualizar"
+  ]
+};
 
 /**
  * Serviço para gerenciamento de permissões
@@ -198,4 +260,8 @@ const permissaoService = {
   }
 };
 
-module.exports = permissaoService;
+module.exports = {
+  ...permissaoService,
+  ROLES_PADRAO,
+  MAPEAMENTO_ROLE_PERMISSAO
+};

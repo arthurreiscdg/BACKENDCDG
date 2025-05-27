@@ -1,5 +1,5 @@
 const { Usuario } = require('../models');
-const { ROLES_PADRAO } = require('../scripts/inicializarPermissoes');
+const { ROLES_PADRAO } = require('../services/permissaoService');
 
 /**
  * Middleware para verificar se o usuário tem acesso a uma escola específica

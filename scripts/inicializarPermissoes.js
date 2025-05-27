@@ -238,7 +238,5 @@ if (require.main === module) {
 module.exports = { 
   inicializarPermissoes,
   atribuirRole,
-  atribuirEscola,
-  ROLES_PADRAO,
-  MAPEAMENTO_ROLE_PERMISSAO
+  atribuirEscola
 };
