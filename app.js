@@ -1,5 +1,6 @@
 require("dotenv").config();
 const express = require("express");
+const fileUpload = require('express-fileupload');
 const sequelize = require("./config/database");
 const authMiddleware = require("./auth/authMiddleware");
 const { sincronizarBancoDados } = require("./scripts/syncDatabase");
@@ -30,9 +31,16 @@ function configurarExpress() {
     
     next();
   });
-  
-  // Middleware para processar JSON (com limite aumentado para PDFs em base64)
+    // Middleware para processar JSON (com limite aumentado para PDFs em base64)
   app.use(express.json({ limit: "10mb" }));
+  
+  // Middleware para processar uploads de arquivos
+  app.use(fileUpload({
+    limits: { fileSize: 10 * 1024 * 1024 }, // limita a 10MB
+    createParentPath: true,
+    useTempFiles: true,
+    tempFileDir: '/tmp/'
+  }));
   
   // Configuração das rotas
   configurarRotas(app);

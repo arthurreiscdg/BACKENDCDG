@@ -5,6 +5,51 @@ const googleDriveService = require("../services/googleDriveService");
 const { Op } = require("sequelize");
 
 /**
+ * Adapta o formato recebido do frontend para o formato esperado pelo backend
+ * @param {Object} dadosRecebidos - Dados no formato recebido do frontend
+ * @returns {Object} - Dados no formato esperado pelo backend
+ */
+function adaptarDadosRecebidos(dadosRecebidos) {
+  // Criar objeto base com os campos adaptados
+  const dadosAdaptados = {
+    nome: dadosRecebidos.nome,
+    email: dadosRecebidos.email,
+    titulo: dadosRecebidos.titulo,
+    data_entrega: dadosRecebidos.dataEntrega,
+    observacoes: dadosRecebidos.observacoes || "",
+    formato: dadosRecebidos.formatoFinal,
+    cor_impressao: dadosRecebidos.corImpressao,
+    impressao: dadosRecebidos.impressao,
+    gramatura: dadosRecebidos.gramatura,
+    papel_adesivo: false, // Valor padrão se não informado
+    tipo_adesivo: null,
+    grampos: dadosRecebidos.grampos,
+    espiral: false, // Valor padrão se não informado
+    capa_pvc: false, // Valor padrão se não informado
+    cod_op: dadosRecebidos.metodoPedido === "manual" ? "MANUAL" : null
+  };
+
+  // Adaptar PDFs para o formato esperado de arquivos
+  if (dadosRecebidos.pdfs && Array.isArray(dadosRecebidos.pdfs)) {
+    dadosAdaptados.arquivos = dadosRecebidos.pdfs.map(pdf => ({
+      nome: pdf.nome,
+      // O base64 precisará ser adicionado posteriormente
+      base64: pdf.base64 || null
+    }));
+  }
+
+  // Adaptar escolas/quantidades para formato de unidades
+  if (dadosRecebidos.escolasQuantidades) {
+    dadosAdaptados.unidades = Object.entries(dadosRecebidos.escolasQuantidades).map(([nome, quantidade]) => ({
+      nome,
+      quantidade
+    }));
+  }
+
+  return dadosAdaptados;
+}
+
+/**
  * Controller para operações relacionadas a formulários
  */
 const formularioController = {
@@ -44,22 +89,24 @@ const formularioController = {
     } catch (error) {
       tratarErroInterno(error, res, "Erro ao obter formulário");
     }
-  },
-  /**
+  },  /**
    * Cria um novo formulário
    * @param {Object} req - Objeto de requisição Express
    * @param {Object} res - Objeto de resposta Express
    */
   criarFormulario: async (req, res) => {
     try {
+      // Adaptar dados recebidos do frontend para o formato esperado pelo backend
+      const dadosAdaptados = adaptarDadosRecebidos(req.body);
+      
       const { 
         nome, email, titulo, data_entrega, observacoes,
         formato, cor_impressao, impressao, gramatura,
         papel_adesivo, tipo_adesivo, grampos, espiral, capa_pvc, cod_op,
         arquivos, unidades
-      } = req.body;
+      } = dadosAdaptados;
       
-      if (!validarCamposFormulario(req.body)) {
+      if (!validarCamposFormulario(dadosAdaptados)) {
         return res.status(400).json({ mensagem: "Nome, email e título são obrigatórios" });
       }
       
@@ -110,8 +157,7 @@ const formularioController = {
     } catch (error) {
       tratarErroInterno(error, res, "Erro ao criar formulário");
     }
-  },
-  /**
+  },  /**
    * Atualiza um formulário existente
    * @param {Object} req - Objeto de requisição Express
    * @param {Object} res - Objeto de resposta Express
@@ -119,12 +165,16 @@ const formularioController = {
   atualizarFormulario: async (req, res) => {
     try {
       const { id } = req.params;
+      
+      // Adaptar dados recebidos do frontend para o formato esperado pelo backend
+      const dadosAdaptados = adaptarDadosRecebidos(req.body);
+      
       const { 
         nome, email, titulo, data_entrega, observacoes,
         formato, cor_impressao, impressao, gramatura,
         papel_adesivo, tipo_adesivo, grampos, espiral, capa_pvc, cod_op,
         arquivos, unidades
-      } = req.body;
+      } = dadosAdaptados;
       
       const formulario = await buscarFormularioPorId(id, false);
       

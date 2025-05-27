@@ -1,5 +1,6 @@
 const express = require("express");
 const formularioController = require("../controllers/formularioController");
+const pdfController = require("../controllers/pdfController");
 
 /**
  * Configuração das rotas de formulários
@@ -49,6 +50,12 @@ function definirRotasManipulacao(router) {
   
   // Adicionar arquivos PDF a um formulário
   router.post("/:id/arquivos", formularioController.adicionarArquivoFormulario);
+  
+  // Upload de arquivo PDF via multipart/form-data
+  router.post("/:formularioId/upload-pdf", pdfController.uploadPdf);
+  
+  // Upload de múltiplos arquivos PDF via multipart/form-data
+  router.post("/:formularioId/upload-pdfs", pdfController.uploadMultiplosPdfs);
   
   // Excluir um arquivo PDF de um formulário
   router.delete("/:formularioId/arquivos/:arquivoId", formularioController.excluirArquivoFormulario);
