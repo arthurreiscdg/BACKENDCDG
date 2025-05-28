@@ -24,6 +24,19 @@ const Formulario = sequelize.define("Formulario", {
   updatedAt: "atualizado_em"
 });
 
+// Definir associações após a definição do modelo
 Formulario.belongsTo(Usuario, { foreignKey: "usuario_id" });
+
+// Definir associação com ArquivoPdf após exportar o modelo
+Formulario.associate = (models) => {
+  Formulario.hasMany(models.ArquivoPdf, { 
+    foreignKey: "formulario_id",
+    as: "arquivos" 
+  });
+  Formulario.hasMany(models.Unidade, { 
+    foreignKey: "formulario_id",
+    as: "unidades" 
+  });
+};
 
 module.exports = Formulario;

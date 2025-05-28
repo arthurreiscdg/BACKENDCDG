@@ -9,9 +9,8 @@ const Unidade = require('./unidade');
 const Webhook = require('./webhook');
 const ArquivoPdf = require('./arquivoPdf');
 
-// As relações entre Usuario e Permissao já estão definidas no modelo UsuarioPermissao
-
-module.exports = {
+// Definir associações
+const models = {
   Usuario,
   Permissao,
   UsuarioPermissao,
@@ -23,3 +22,12 @@ module.exports = {
   Webhook,
   ArquivoPdf
 };
+
+// Executar associações se existirem
+Object.keys(models).forEach(modelName => {
+  if (models[modelName].associate) {
+    models[modelName].associate(models);
+  }
+});
+
+module.exports = models;

@@ -1,6 +1,4 @@
-const Formulario = require("../models/formulario");
-const ArquivoPdf = require("../models/arquivoPdf");
-const Unidade = require("../models/unidade");
+const { Formulario, ArquivoPdf, Unidade } = require("../models");
 const googleDriveService = require("../services/googleDriveService");
 const { Op } = require("sequelize");
 
@@ -397,8 +395,8 @@ async function buscarFormularioPorId(id, incluirArquivo = true) {
   
   if (incluirArquivo) {
     opcoes.include = [
-      { model: ArquivoPdf },
-      { model: Unidade }
+      { model: ArquivoPdf, as: 'arquivos' },
+      { model: Unidade, as: 'unidades' }
     ];
   }
   

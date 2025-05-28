@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
-const Formulario = require("./formulario");
 
 const ArquivoPdf = sequelize.define("ArquivoPdf", {
   nome: { type: DataTypes.STRING, allowNull: false },
@@ -14,6 +13,12 @@ const ArquivoPdf = sequelize.define("ArquivoPdf", {
   updatedAt: "atualizado_em"
 });
 
-ArquivoPdf.belongsTo(Formulario, { foreignKey: "formulario_id" });
+// Definir associação após a definição do modelo
+ArquivoPdf.associate = (models) => {
+  ArquivoPdf.belongsTo(models.Formulario, { 
+    foreignKey: "formulario_id",
+    as: "formulario" 
+  });
+};
 
 module.exports = ArquivoPdf;

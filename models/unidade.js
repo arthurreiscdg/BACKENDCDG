@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
-const Formulario = require("./formulario");
 
 const Unidade = sequelize.define("Unidade", {
   nome: { type: DataTypes.STRING, allowNull: false },
@@ -11,6 +10,12 @@ const Unidade = sequelize.define("Unidade", {
   updatedAt: "atualizado_em"
 });
 
-Unidade.belongsTo(Formulario, { foreignKey: "formulario_id" });
+// Definir associação após a definição do modelo
+Unidade.associate = (models) => {
+  Unidade.belongsTo(models.Formulario, { 
+    foreignKey: "formulario_id",
+    as: "formulario" 
+  });
+};
 
 module.exports = Unidade;
