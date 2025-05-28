@@ -36,7 +36,6 @@ web_modules/
 .parcel-cache
 
 # Arquivos de banco de dados
-*.sqlite
 *.sqlite-journal
 *.db
 *.sql
