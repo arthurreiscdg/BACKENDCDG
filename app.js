@@ -19,6 +19,12 @@ const usuarioRoutes = require("./routes/usuarios");
  */
 function configurarExpress() {
   const app = express();
+    // Configurar timeout para requisições grandes (5 minutos)
+  app.use((req, res, next) => {
+    req.setTimeout(300000); // 5 minutos em ms
+    res.setTimeout(300000); // 5 minutos em ms
+    next();
+  });
   
   // Middleware para cookies
   app.use(cookieParser());
@@ -36,16 +42,20 @@ function configurarExpress() {
     }
     
     next();
-  });
-    // Middleware para processar JSON (com limite aumentado para PDFs em base64)
-  app.use(express.json({ limit: "10mb" }));
+  });  // Middleware para processar JSON (com limite aumentado para PDFs em base64 - 300MB)
+  app.use(express.json({ limit: "300mb" }));
+  
+  // Middleware para processar dados URL-encoded (com limite aumentado - 300MB)
+  app.use(express.urlencoded({ limit: "300mb", extended: true }));
   
   // Middleware para processar uploads de arquivos
   app.use(fileUpload({
-    limits: { fileSize: 10 * 1024 * 1024 }, // limita a 10MB
+    limits: { fileSize: 200 * 1024 * 1024 }, // limita a 200MB
     createParentPath: true,
     useTempFiles: true,
-    tempFileDir: '/tmp/'
+    tempFileDir: '/tmp/',
+    abortOnLimit: false, // Não abortar imediatamente no limite
+    responseOnLimit: "Arquivo muito grande" // Mensagem personalizada
   }));
   
   // Configuração das rotas
@@ -76,10 +86,15 @@ async function iniciarServidor(app) {
     // Obtém a porta do arquivo
     const PORT = process.env.API_PORT;
     
-    // Inicia o servidor
-    app.listen(PORT, () => {
+    // Inicia o servidor com timeout configurado
+    const server = app.listen(PORT, () => {
       console.log(`Servidor rodando na porta ${PORT}`);
     });
+      // Configurar timeout do servidor para uploads grandes (5 minutos)
+    server.timeout = 300000; // 5 minutos
+    server.keepAliveTimeout = 320000; // 5 minutos + 20 segundos
+    server.headersTimeout = 330000; // 5 minutos + 30 segundos
+    
   } catch (error) {
     console.error("Erro ao iniciar o servidor:", error);
     process.exit(1);
