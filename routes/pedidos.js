@@ -45,17 +45,15 @@ function definirRotasConsulta(router) {
 function definirRotasManipulacao(router) {
   // Criar um novo pedido (admin, dev, gerente, usuário)
   router.post("/", verificarRole(['admin', 'dev', 'gerente', 'usuario']), pedidoController.criarPedido);
-    // Atualizar um pedido (admin, dev, gerente)
+  
+  // Atualizar um pedido (admin, dev, gerente)
   router.put("/:id", verificarRole(['admin', 'dev', 'gerente']), pedidoController.atualizarPedido);
   
   // Excluir um pedido (apenas admin e dev)
   router.delete("/:id", verificarRole(['admin', 'dev']), pedidoController.excluirPedido);
   
   // Alterar status de um pedido (admin, dev, gerente, usuário, expedição - com restrições)
-  router.put("/:id/status", verificarPermissaoAlterarStatus, pedidoController.alterarStatus);
-  
-  // Excluir um pedido
-  router.delete("/:id", pedidoController.excluirPedido);
+  // router.put("/:id/status", verificarPermissaoAlterarStatus, pedidoController.alterarStatus);
 }
 
 /**
@@ -64,13 +62,13 @@ function definirRotasManipulacao(router) {
  */
 function definirRotasEspeciais(router) {
   // Baixar pedidos (admin, dev, gerente, usuário)
-  router.get("/baixar/relatorio", verificarPermissaoBaixarPedidos, pedidoController.baixarRelatorio);
+  // router.get("/baixar/relatorio", verificarPermissaoBaixarPedidos, pedidoController.baixarRelatorio);
   
   // Baixar etiquetas (admin, dev, gerente, expedição)
-  router.get("/baixar/etiquetas", verificarPermissaoBaixarEtiquetas, pedidoController.baixarEtiquetas);
+  // router.get("/baixar/etiquetas", verificarPermissaoBaixarEtiquetas, pedidoController.baixarEtiquetas);
   
   // Estatísticas de pedidos (admin, dev, gerente)
-  router.get("/estatisticas/resumo", verificarRole(['admin', 'dev', 'gerente']), pedidoController.obterEstatisticas);
+  // router.get("/estatisticas/resumo", verificarRole(['admin', 'dev', 'gerente']), pedidoController.obterEstatisticas);
 }
 
 // Exporta o router configurado

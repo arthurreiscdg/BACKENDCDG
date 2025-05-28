@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const webhookController = require("../controllers/webhookController");
-const authMiddleware = require("../auth/authMiddleware");
+const { authMiddleware } = require("../auth/authMiddleware");
 
 // Todas as rotas de webhook requerem autenticação
 router.use(authMiddleware());

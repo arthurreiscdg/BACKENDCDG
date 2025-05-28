@@ -26,18 +26,24 @@ function authMiddleware() {
 }
 
 /**
- * Extrai o token JWT do cabeçalho de autorização
+ * Extrai o token JWT do cabeçalho de autorização ou dos cookies
  * @param {Object} req - Objeto de requisição Express
  * @returns {string|null} Token JWT ou null se não for encontrado
  */
 function extrairToken(req) {
+  // Primeiro, tenta extrair do header Authorization
   const authHeader = req.headers.authorization;
   
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    return authHeader.split(" ")[1];
   }
   
-  return authHeader.split(" ")[1];
+  // Se não encontrou no header, tenta extrair dos cookies
+  if (req.cookies && req.cookies.auth_token) {
+    return req.cookies.auth_token;
+  }
+  
+  return null;
 }
 
 /**
@@ -78,4 +84,17 @@ function tratarErroAutenticacao(error, res) {
   responderErroAutenticacao(res, "Não autorizado: token inválido ou expirado");
 }
 
-module.exports = authMiddleware;
+/**
+ * Middleware de autenticação simplificado para compatibilidade
+ * @returns {Function} Middleware para Express
+ */
+function verificarAutenticacao() {
+  return authMiddleware();
+}
+
+module.exports = {
+  authMiddleware,
+  verificarAutenticacao,
+  extrairToken,
+  verificarEDecodificarToken
+};

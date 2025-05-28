@@ -3,6 +3,12 @@ const sequelize = require("../config/database");
 
 const Usuario = sequelize.define("Usuario", {
   nome: DataTypes.STRING,
+  username: { 
+    type: DataTypes.STRING, 
+    unique: true, 
+    allowNull: true,
+    comment: "Nome de usuário único para login"
+  },
   email: { type: DataTypes.STRING, unique: true, allowNull: false },
   senha_hash: { type: DataTypes.STRING, allowNull: false },
   is_admin: { type: DataTypes.BOOLEAN, defaultValue: false },

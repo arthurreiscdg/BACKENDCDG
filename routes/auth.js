@@ -1,6 +1,6 @@
 const express = require("express");
 const authController = require("../controllers/authController");
-const authMiddleware = require("../auth/authMiddleware");
+const { authMiddleware } = require("../auth/authMiddleware");
 
 /**
  * Configuração das rotas de autenticação
@@ -35,6 +35,9 @@ function definirRotasPublicas(router) {
 function definirRotasProtegidas(router) {
   // Rota para verificar se o token é válido e obter informações do usuário
   router.get("/verificar", authMiddleware(), authController.verificarToken);
+  
+  // Rota de logout
+  router.post("/logout", authMiddleware(), authController.logout);
 }
 
 module.exports = configurarRotasAutenticacao();

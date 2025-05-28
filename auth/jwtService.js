@@ -9,12 +9,14 @@ const jwtService = {
    * Gera um token JWT para o usuário
    * @param {Object} usuario - Objeto com dados do usuário
    * @returns {string} Token JWT gerado
-   */
-  gerarToken: (usuario) => {
+   */  gerarToken: (usuario) => {
     const payload = { 
       id: usuario.id, 
-      email: usuario.email, 
-      is_admin: usuario.is_admin 
+      email: usuario.email,
+      username: usuario.username,
+      is_admin: usuario.is_admin,
+      roles: usuario.roles || [],
+      escola_id: usuario.escola_id
     };
     
     const secret = process.env.JWT_SECRET;

@@ -10,16 +10,15 @@ const authController = {
    * Realiza o login do usuário
    * @param {Object} req - Objeto de requisição Express
    * @param {Object} res - Objeto de resposta Express
-   */
-  login: async (req, res) => {
+   */  login: async (req, res) => {
     try {
-      const { email, senha } = req.body;
+      const { username, password } = req.body;
 
-      if (!validarCamposLogin(email, senha)) {
-        return res.status(400).json({ mensagem: "Email e senha são obrigatórios" });
+      if (!validarCamposLogin(username, password)) {
+        return res.status(400).json({ mensagem: "Username/email e senha são obrigatórios" });
       }
 
-      const usuario = await buscarUsuarioPorEmail(email);
+      const usuario = await buscarUsuarioPorUsernameOuEmail(username);
       
       if (!usuario) {
         return res.status(401).json({ mensagem: "Credenciais inválidas" });
@@ -29,18 +28,25 @@ const authController = {
         return res.status(401).json({ mensagem: "Usuário desativado. Entre em contato com o administrador" });
       }
 
-      const senhaCorreta = await verificarSenha(senha, usuario.senha_hash);
+      const senhaCorreta = await verificarSenha(password, usuario.senha_hash);
       
       if (!senhaCorreta) {
         return res.status(401).json({ mensagem: "Credenciais inválidas" });
-      }
-
-      const token = jwtService.gerarToken(usuario);
+      }      const token = jwtService.gerarToken(usuario);
       const usuarioInfo = formatarDadosUsuario(usuario);
+
+      // Define o cookie com o token (HTTPOnly e seguro)
+      res.cookie('auth_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // HTTPS em produção
+        sameSite: 'lax', // Proteção CSRF
+        maxAge: 24 * 60 * 60 * 1000 // 24 horas
+      });
 
       res.json({
         token,
-        usuario: usuarioInfo
+        usuario: usuarioInfo,
+        success: true
       });
     } catch (error) {
       tratarErroInterno(error, res, "Erro no login");
@@ -80,13 +86,11 @@ const authController = {
       tratarErroInterno(error, res, "Erro no registro");
     }
   },
-
   /**
    * Verifica se o token JWT é válido e retorna informações do usuário
    * @param {Object} req - Objeto de requisição Express
    * @param {Object} res - Objeto de resposta Express
-   */
-  verificarToken: async (req, res) => {
+   */  verificarToken: async (req, res) => {
     try {
       const usuarioId = req.usuario.id;
       const usuario = await buscarUsuarioPorId(usuarioId);
@@ -95,21 +99,48 @@ const authController = {
         return res.status(401).json({ mensagem: "Usuário não encontrado ou desativado" });
       }
       
-      res.json({ usuario });
+      const usuarioInfo = formatarDadosUsuario(usuario);
+      res.json({ 
+        usuario: usuarioInfo,
+        success: true 
+      });
     } catch (error) {
       tratarErroInterno(error, res, "Erro na verificação do token");
+    }
+  },
+
+  /**
+   * Realiza logout do usuário
+   * @param {Object} req - Objeto de requisição Express
+   * @param {Object} res - Objeto de resposta Express
+   */
+  logout: async (req, res) => {
+    try {
+      // Limpa o cookie de autenticação
+      res.clearCookie('auth_token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      });
+
+      res.json({
+        success: true,
+        message: "Logout realizado com sucesso"
+      });
+    } catch (error) {
+      tratarErroInterno(error, res, "Erro no logout");
     }
   }
 };
 
 /**
  * Validação dos campos de login
- * @param {string} email - Email do usuário
- * @param {string} senha - Senha do usuário
+ * @param {string} username - Username/email do usuário
+ * @param {string} password - Senha do usuário
  * @returns {boolean} Verdadeiro se os campos são válidos
  */
-function validarCamposLogin(email, senha) {
-  return email && senha;
+function validarCamposLogin(username, password) {
+  return username && password;
 }
 
 /**
@@ -121,6 +152,23 @@ function validarCamposLogin(email, senha) {
  */
 function validarCamposRegistro(nome, email, senha) {
   return nome && email && senha;
+}
+
+/**
+ * Busca um usuário pelo username ou email
+ * @param {string} usernameOuEmail - Username ou email do usuário
+ * @returns {Promise<Object>} Promessa com o usuário ou null
+ */
+async function buscarUsuarioPorUsernameOuEmail(usernameOuEmail) {
+  const { Op } = require('sequelize');
+  return await Usuario.findOne({ 
+    where: { 
+      [Op.or]: [
+        { username: usernameOuEmail },
+        { email: usernameOuEmail }
+      ]
+    } 
+  });
 }
 
 /**
@@ -139,7 +187,7 @@ async function buscarUsuarioPorEmail(email) {
  */
 async function buscarUsuarioPorId(id) {
   return await Usuario.findByPk(id, {
-    attributes: ['id', 'nome', 'email', 'is_admin', 'is_ativo']
+    attributes: ['id', 'nome', 'username', 'email', 'is_admin', 'is_ativo', 'roles', 'escola_id', 'metadados']
   });
 }
 
@@ -181,9 +229,36 @@ function formatarDadosUsuario(usuario) {
   return {
     id: usuario.id,
     nome: usuario.nome,
+    username: usuario.username,
     email: usuario.email,
-    is_admin: usuario.is_admin
+    is_admin: usuario.is_admin,
+    roles: usuario.roles || [],
+    escola_id: usuario.escola_id,
+    metadados: usuario.metadados || {},
+    role: determinarRolePrincipal(usuario)
   };
+}
+
+/**
+ * Determina o role principal do usuário para compatibilidade com o frontend
+ * @param {Object} usuario - Objeto com dados do usuário
+ * @returns {string} Role principal do usuário
+ */
+function determinarRolePrincipal(usuario) {
+  if (usuario.is_admin) return 'admin';
+  
+  const roles = usuario.roles || [];
+  if (roles.length > 0) {
+    // Prioriza roles específicas de escola
+    const escolaRoles = ['zerohum', 'coleguium', 'elite', 'pensi'];
+    const escolaRole = roles.find(role => escolaRoles.includes(role));
+    if (escolaRole) return escolaRole;
+    
+    // Retorna a primeira role se não for de escola
+    return roles[0];
+  }
+  
+  return 'usuario';
 }
 
 /**

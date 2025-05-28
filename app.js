@@ -1,8 +1,9 @@
 require("dotenv").config();
 const express = require("express");
 const fileUpload = require('express-fileupload');
+const cookieParser = require('cookie-parser');
 const sequelize = require("./config/database");
-const authMiddleware = require("./auth/authMiddleware");
+const { authMiddleware } = require("./auth/authMiddleware");
 const { sincronizarBancoDados } = require("./scripts/syncDatabase");
 
 // Importação das rotas
@@ -19,11 +20,15 @@ const usuarioRoutes = require("./routes/usuarios");
 function configurarExpress() {
   const app = express();
   
-  // Middleware para CORS (Cross-Origin Resource Sharing)
+  // Middleware para cookies
+  app.use(cookieParser());
+  
+  // Middleware para CORS (Cross-Origin Resource Sharing) - ATUALIZADO para cookies
   app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+    res.header("Access-Control-Allow-Origin", "http://localhost:5173"); // URL específica do frontend
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    res.header("Access-Control-Allow-Credentials", "true"); // IMPORTANTE: permite cookies
     
     // Responde às requisições OPTIONS
     if (req.method === "OPTIONS") {
