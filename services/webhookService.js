@@ -53,13 +53,23 @@ const webhookService = {
           status_id: status.id,
           status: status.nome
         }
-      };
-
-      // Envia para todos os webhooks cadastrados
+      };      // Envia para todos os webhooks cadastrados
       const resultados = await Promise.all(
         webhooks.map(webhook => enviarWebhook(webhook.url_destino, payload))
       );
 
+      // Verifica se todos os webhooks foram enviados com sucesso
+      const falhas = resultados.filter(resultado => !resultado.success);
+      
+      if (falhas.length > 0) {
+        const errosDetalhados = falhas.map(falha => 
+          `URL: ${falha.url}, Erro: ${falha.error}, Status: ${falha.status || 'N/A'}`
+        ).join('; ');
+        
+        throw new Error(`Falha ao enviar ${falhas.length} de ${resultados.length} webhooks: ${errosDetalhados}`);
+      }
+
+      console.log(`Todos os ${resultados.length} webhooks enviados com sucesso para pedido ${pedido.id}`);
       return resultados;
     } catch (error) {
       console.error("Erro ao notificar atualização via webhook:", error);

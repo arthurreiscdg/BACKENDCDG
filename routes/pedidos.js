@@ -36,6 +36,12 @@ function definirRotasConsulta(router) {
   
   // Obter um pedido específico
   router.get("/:id", verificarPermissaoPedido, pedidoController.obterPedido);
+  
+  // Obter histórico de status de um pedido
+  router.get("/:id/historico", verificarPermissaoPedido, pedidoController.obterHistoricoPedido);
+  
+  // Obter documentos de um pedido
+  router.get("/:id/documentos", verificarPermissaoPedido, pedidoController.obterDocumentosPedido);
 }
 
 /**
@@ -48,6 +54,12 @@ function definirRotasManipulacao(router) {
   
   // Atualizar um pedido (admin, dev, gerente)
   router.put("/:id", verificarRole(['admin', 'dev', 'gerente']), pedidoController.atualizarPedido);
+  
+  // Atualização em lote de status de pedidos
+  router.put("/bulk-update-status", verificarRole(['admin', 'dev', 'gerente']), pedidoController.atualizarStatusLote);
+  
+  // Gerar PDF de pedidos
+  router.post("/download-pdf", verificarPermissaoPedido, pedidoController.gerarPdfPedidos);
   
   // Excluir um pedido (apenas admin e dev)
   router.delete("/:id", verificarRole(['admin', 'dev']), pedidoController.excluirPedido);

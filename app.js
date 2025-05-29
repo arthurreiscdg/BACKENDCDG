@@ -75,6 +75,9 @@ function configurarRotas(app) {
   app.use("/api/integracao", integracaoRoutes);
   app.use("/api/webhooks", authMiddleware(), webhookRoutes);
   app.use("/api/usuarios", authMiddleware(), usuarioRoutes);
+  
+  // Rota para buscar status de pedidos
+  app.get("/api/status-pedidos", authMiddleware(), require("./controllers/pedidoController").listarStatusPedidos);
 }
 
 /**
