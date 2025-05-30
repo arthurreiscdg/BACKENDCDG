@@ -8,6 +8,7 @@ const StatusPedido = require('./statusPedido');
 const Unidade = require('./unidade');
 const Webhook = require('./webhook');
 const ArquivoPdf = require('./arquivoPdf');
+const pedidoJsonPdf = require('./pedidoJsonPdf');
 
 // Definir associações
 const models = {
