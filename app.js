@@ -13,6 +13,7 @@ const formularioRoutes = require("./routes/formularios");
 const integracaoRoutes = require("./routes/integracao");
 const webhookRoutes = require("./routes/webhooks");
 const usuarioRoutes = require("./routes/usuarios");
+const logEndpointMiddleware = require('./controllers/logEndpointMiddleware');
 
 /**
  * Configuração e inicialização do Express
@@ -57,6 +58,9 @@ function configurarExpress() {
     abortOnLimit: false, // Não abortar imediatamente no limite
     responseOnLimit: "Arquivo muito grande" // Mensagem personalizada
   }));
+  
+  // Middleware para logar o endpoint acessado
+  app.use(logEndpointMiddleware);
   
   // Configuração das rotas
   configurarRotas(app);
