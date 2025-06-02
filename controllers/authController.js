@@ -11,6 +11,7 @@ const authController = {
    * @param {Object} req - Objeto de requisição Express
    * @param {Object} res - Objeto de resposta Express
    */  login: async (req, res) => {
+    console.log(`[AUTH] Login solicitado para:`, req.body?.username || req.body?.email);
     try {
       const { username, password } = req.body;
 
@@ -59,6 +60,7 @@ const authController = {
    * @param {Object} res - Objeto de resposta Express
    */
   registro: async (req, res) => {
+    console.log(`[AUTH] Registro solicitado para:`, req.body?.email);
     try {
       const { nome, email, senha, is_admin = false } = req.body;
 
@@ -91,6 +93,7 @@ const authController = {
    * @param {Object} req - Objeto de requisição Express
    * @param {Object} res - Objeto de resposta Express
    */  verificarToken: async (req, res) => {
+    console.log(`[AUTH] Verificação de token para usuário ID:`, req.usuario?.id);
     try {
       const usuarioId = req.usuario.id;
       const usuario = await buscarUsuarioPorId(usuarioId);
@@ -115,6 +118,7 @@ const authController = {
    * @param {Object} res - Objeto de resposta Express
    */
   logout: async (req, res) => {
+    console.log(`[AUTH] Logout solicitado para usuário ID:`, req.usuario?.id);
     try {
       // Limpa o cookie de autenticação
       res.clearCookie('auth_token', {
