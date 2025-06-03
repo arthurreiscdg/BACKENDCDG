@@ -8,6 +8,7 @@ const StatusPedido = sequelize.define("StatusPedido", {
   ordem: { type: DataTypes.INTEGER, defaultValue: 0 },
   ativo: { type: DataTypes.BOOLEAN, defaultValue: true },
 }, {
+  tableName: "status_pedidos",
   timestamps: false
 });
 

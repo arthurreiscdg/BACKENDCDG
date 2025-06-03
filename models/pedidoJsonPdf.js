@@ -7,14 +7,14 @@ const PedidoJsonPdf = sequelize.define("PedidoJsonPdf", {
     allowNull: false,
   },
   json_formulario: {
-    type: DataTypes.JSON,
+    type: DataTypes.JSONB, // Mudança para JSONB para melhor suporte no PostgreSQL
     allowNull: false,
   },
   pedido_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: "Pedidos", // Nome da tabela de pedidos
+      model: "pedidos", // Nome corrigido da tabela no PostgreSQL
       key: "id",
     },
     onUpdate: "CASCADE",

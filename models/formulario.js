@@ -19,6 +19,7 @@ const Formulario = sequelize.define("Formulario", {
   capa_pvc: { type: DataTypes.BOOLEAN, defaultValue: false },
   cod_op: DataTypes.STRING,
 }, {
+  tableName: "formularios",
   timestamps: true,
   createdAt: "criado_em",
   updatedAt: "atualizado_em"

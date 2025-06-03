@@ -9,6 +9,7 @@ const Webhook = sequelize.define("Webhook", {
     defaultValue: true
   },
 }, {
+  tableName: "webhooks",
   timestamps: true,
   createdAt: "criado_em",
   updatedAt: false

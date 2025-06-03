@@ -44,6 +44,7 @@ const Pedido = sequelize.define("Pedido", {
   mockup_capa_frente: DataTypes.STRING(500),
   mockup_capa_costas: DataTypes.STRING(500),
 }, {
+  tableName: "pedidos",
   timestamps: true,
   createdAt: "criado_em",
   updatedAt: "atualizado_em"

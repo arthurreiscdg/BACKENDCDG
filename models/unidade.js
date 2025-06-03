@@ -5,6 +5,7 @@ const Unidade = sequelize.define("Unidade", {
   nome: { type: DataTypes.STRING, allowNull: false },
   quantidade: { type: DataTypes.INTEGER, defaultValue: 1 },
 }, {
+  tableName: "unidades",
   timestamps: true,
   createdAt: "criado_em",
   updatedAt: "atualizado_em"

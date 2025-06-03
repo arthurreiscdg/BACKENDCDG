@@ -2,7 +2,8 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
 const Usuario = sequelize.define("Usuario", {
-  nome: DataTypes.STRING,  username: { 
+  nome: DataTypes.STRING,
+  username: { 
     type: DataTypes.STRING(255), 
     unique: true, 
     allowNull: true,
@@ -30,18 +31,12 @@ const Usuario = sequelize.define("Usuario", {
     comment: "ID da escola que o usuário tem acesso quando role = escola"
   },
   metadados: {
-    type: DataTypes.TEXT,
+    type: DataTypes.JSONB, // Mudança para JSONB para melhor suporte no PostgreSQL
     allowNull: true,
-    get() {
-      const rawValue = this.getDataValue('metadados');
-      return rawValue ? JSON.parse(rawValue) : {};
-    },
-    set(val) {
-      this.setDataValue('metadados', JSON.stringify(val || {}));
-    },
     comment: "Dados adicionais do usuário em formato JSON"
   },
 }, {
+  tableName: "usuarios",
   timestamps: true,
   createdAt: "criado_em",
   updatedAt: "atualizado_em"

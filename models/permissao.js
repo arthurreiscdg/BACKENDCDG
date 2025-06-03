@@ -17,6 +17,7 @@ const Permissao = sequelize.define("Permissao", {
     unique: true
   }
 }, {
+  tableName: "permissoes",
   timestamps: true,
   createdAt: "criado_em",
   updatedAt: "atualizado_em"

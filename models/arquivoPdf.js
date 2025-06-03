@@ -8,6 +8,7 @@ const ArquivoPdf = sequelize.define("ArquivoPdf", {
   web_view_link: DataTypes.STRING(500),
   json_link: DataTypes.STRING(500),
 }, {
+  tableName: "arquivo_pdfs",
   timestamps: true,
   createdAt: "criado_em",
   updatedAt: "atualizado_em"

@@ -9,6 +9,7 @@ const HistoricoStatus = sequelize.define("HistoricoStatus", {
   status_id: { type: DataTypes.INTEGER, allowNull: false },
   usuario_id: { type: DataTypes.INTEGER, allowNull: false },
 }, {
+  tableName: "historico_status",
   timestamps: true,
   createdAt: "criado_em",
   updatedAt: false

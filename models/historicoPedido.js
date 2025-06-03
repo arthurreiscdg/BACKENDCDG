@@ -14,7 +14,7 @@ const HistoricoPedido = sequelize.define("HistoricoPedido", {
     type: DataTypes.INTEGER,
     allowNull: true,
     references: {
-      model: 'StatusPedidos',
+      model: 'status_pedidos',
       key: 'id'
     },
     comment: "Status anterior do pedido"
@@ -23,33 +23,29 @@ const HistoricoPedido = sequelize.define("HistoricoPedido", {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'StatusPedidos',
+      model: 'status_pedidos',
       key: 'id'
     },
     comment: "Novo status do pedido"
   },
   tipo_acao: {
-    type: DataTypes.ENUM('criacao', 'alteracao_status', 'observacao', 'sistema'),
+    type: DataTypes.STRING, // PostgreSQL não usa ENUM da mesma forma que o MySQL
+    validate: {
+      isIn: [['criacao', 'alteracao_status', 'observacao', 'sistema']]
+    },
     defaultValue: 'alteracao_status',
     comment: "Tipo da ação realizada"
   },
   dados_adicionais: {
-    type: DataTypes.TEXT,
+    type: DataTypes.JSONB, // Mudança para JSONB para melhor suporte no PostgreSQL
     allowNull: true,
-    get() {
-      const rawValue = this.getDataValue('dados_adicionais');
-      return rawValue ? JSON.parse(rawValue) : {};
-    },
-    set(val) {
-      this.setDataValue('dados_adicionais', JSON.stringify(val || {}));
-    },
     comment: "Dados adicionais da mudança em formato JSON"
   }
 }, {
+  tableName: 'historico_pedidos',
   timestamps: true,
   createdAt: "criado_em",
-  updatedAt: false,
-  tableName: 'HistoricoPedidos'
+  updatedAt: false
 });
 
 // Relacionamentos
