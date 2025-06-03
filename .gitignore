@@ -5,7 +5,7 @@
 .env.local
 .env.development
 .env.test
-.env.production
+#.env.production - comentado para manter como referência
 .env.*.local
 
 # Logs

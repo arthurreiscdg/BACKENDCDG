@@ -37,12 +37,21 @@ const authController = {
       const usuarioInfo = formatarDadosUsuario(usuario);
 
       // Define o cookie com o token (HTTPOnly e seguro)
-      res.cookie('auth_token', token, {
+      // Configuração ajustada para funcionar com CORS
+      const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // HTTPS em produção
-        sameSite: 'lax', // Proteção CSRF
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' para CORS em produção
         maxAge: 24 * 60 * 60 * 1000 // 24 horas
-      });
+      };
+
+      // Em produção (Render), ajustar para CORS
+      if (process.env.NODE_ENV === 'production') {
+        cookieOptions.secure = true; // Obrigatório com sameSite: 'none'
+        cookieOptions.sameSite = 'none';
+      }
+
+      res.cookie('auth_token', token, cookieOptions);
 
       res.json({
         token,
@@ -116,16 +125,23 @@ const authController = {
    * Realiza logout do usuário
    * @param {Object} req - Objeto de requisição Express
    * @param {Object} res - Objeto de resposta Express
-   */
-  logout: async (req, res) => {
+   */  logout: async (req, res) => {
     console.log(`[AUTH] Logout solicitado para usuário ID:`, req.usuario?.id);
     try {
-      // Limpa o cookie de autenticação
-      res.clearCookie('auth_token', {
+      // Limpa o cookie de autenticação com as mesmas configurações usadas no login
+      const clearCookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
-      });
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+      };
+
+      // Em produção (Render), usar sameSite: 'none' para CORS
+      if (process.env.NODE_ENV === 'production') {
+        clearCookieOptions.secure = true;
+        clearCookieOptions.sameSite = 'none';
+      }
+
+      res.clearCookie('auth_token', clearCookieOptions);
 
       res.json({
         success: true,
