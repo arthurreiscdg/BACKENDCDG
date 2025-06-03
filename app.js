@@ -28,18 +28,25 @@ function configurarExpress() {
   });
   
   // Middleware para cookies
-  app.use(cookieParser());
-  // Middleware para CORS (Cross-Origin Resource Sharing) - ATUALIZADO para produção
+  app.use(cookieParser());  // Middleware para CORS (Cross-Origin Resource Sharing) - ATUALIZADO para produção
   app.use((req, res, next) => {
     const allowedOrigins = [
       "http://localhost:5173", // Desenvolvimento local
+      "http://localhost:3000", // Desenvolvimento local alternativo
+      "http://localhost:5174", // Desenvolvimento local alternativo
       "https://cdgproducao.onrender.com", // Frontend em produção no Render
+      "https://casadagrafica.vercel.app", // Frontend em produção na Vercel
       "https://cdgapp.com.br" // Se você tiver um domínio personalizado
     ];
     
     const origin = req.headers.origin;
+    console.log(`[CORS] Origin recebida: ${origin}`); // Log para debug
+    
     if (allowedOrigins.includes(origin)) {
       res.header("Access-Control-Allow-Origin", origin);
+      console.log(`[CORS] Origin permitida: ${origin}`); // Log para debug
+    } else {
+      console.log(`[CORS] Origin não permitida: ${origin}`); // Log para debug
     }
     
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
