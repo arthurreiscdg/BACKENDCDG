@@ -54,13 +54,16 @@ const criarDadosIniciais = async () => {
   try {
     console.log("Criando dados iniciais...");
     
+    // Importar os modelos necessários
+    const { StatusPedido, Usuario } = models;
+    
     // Criar status de pedido padrão
     await StatusPedido.bulkCreate([
       { id: 1, nome: "Aberto", descricao: "Pedido aberto", cor_css: "blue", ordem: 1 },
       { id: 2, nome: "Em andamento", descricao: "Pedido em andamento", cor_css: "orange", ordem: 2 },
       { id: 3, nome: "Concluído", descricao: "Pedido concluído", cor_css: "green", ordem: 3 },
       { id: 4, nome: "Cancelado", descricao: "Pedido cancelado", cor_css: "red", ordem: 4 }
-    ]);
+    ], { ignoreDuplicates: true });
     
     // Criar usuário admin padrão
     const bcrypt = require("bcrypt");
@@ -70,8 +73,10 @@ const criarDadosIniciais = async () => {
     await Usuario.create({
       nome: "Administrador",
       email: "admin@sistemaCDG.com",
+      username: "admin",
       senha_hash,
-      is_admin: true
+      is_admin: true,
+      is_ativo: true
     });
     
     console.log("Dados iniciais criados com sucesso");

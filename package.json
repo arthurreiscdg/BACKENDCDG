@@ -1,7 +1,8 @@
 {
   "name": "systemcdg",
   "version": "1.0.0",
-  "main": "app.js",  "scripts": {
+  "main": "app.js",
+  "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
     "dev": "nodemon app.js",
@@ -10,10 +11,10 @@
     "db:reset": "node ./scripts/syncDatabase.js --force",
     "db:update": "node ./scripts/syncDatabase.js --alter",
     "create:user": "node ./scripts/criarUsuarioTeste.js",
-    "test:integracao": "node ./scripts/testarIntegracao.js",
-    "webhook:criar": "node ./scripts/gerenciarWebhooks.js --criar",
+    "test:integracao": "node ./scripts/testarIntegracao.js",    "webhook:criar": "node ./scripts/gerenciarWebhooks.js --criar",
     "webhook:listar": "node ./scripts/gerenciarWebhooks.js --listar",
-    "webhook:testar": "node ./scripts/gerenciarWebhooks.js --testar"
+    "webhook:testar": "node ./scripts/gerenciarWebhooks.js --testar",
+    "webhook:popular": "node ./scripts/popularWebhooks.js"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +29,8 @@
     "express-fileupload": "^1.5.1",
     "googleapis": "^131.0.0",
     "jsonwebtoken": "^9.0.0",
+    "pg": "^8.16.0",
+    "pg-hstore": "^2.3.4",
     "sequelize": "^6.31.0",
     "sqlite3": "^5.1.6"
   },

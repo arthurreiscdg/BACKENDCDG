@@ -10,10 +10,21 @@ const dbConfig = {
    * @returns {Sequelize} Instância configurada do Sequelize
    */
   criarConexao: () => {
+    // Configuração para PostgreSQL (Supabase)
     const config = {
-      dialect: "sqlite",
-      storage: process.env.DATABASE_PATH || "./database.sqlite",
-      logging: process.env.NODE_ENV === "development",
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT || 5432,
+      database: process.env.DB_NAME,
+      username: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      dialect: "postgres",
+      dialectOptions: {
+        ssl: process.env.DB_SSL === 'true' ? {
+          require: true,
+          rejectUnauthorized: false
+        } : false
+      },
+      logging: process.env.NODE_ENV === "development" ? console.log : false,
       pool: {
         max: 5,
         min: 0,

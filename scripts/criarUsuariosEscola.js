@@ -58,10 +58,9 @@ async function criarUsuarios() {
   try {
     console.log('🔄 Conectando ao banco de dados...');
     await sequelize.authenticate();
-    console.log('✅ Conexão estabelecida com sucesso');
-
-    console.log('🔄 Sincronizando modelos...');
-    await sequelize.sync({ alter: true });
+    console.log('✅ Conexão estabelecida com sucesso');    console.log('🔄 Sincronizando modelos...');
+    // Removido alter: true para evitar problemas com sintaxe SQL do PostgreSQL
+    // await sequelize.sync({ alter: true });
 
     for (const userData of usuariosEscola) {
       try {

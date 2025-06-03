@@ -2,9 +2,8 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
 
 const Usuario = sequelize.define("Usuario", {
-  nome: DataTypes.STRING,
-  username: { 
-    type: DataTypes.STRING, 
+  nome: DataTypes.STRING,  username: { 
+    type: DataTypes.STRING(255), 
     unique: true, 
     allowNull: true,
     comment: "Nome de usuário único para login"
