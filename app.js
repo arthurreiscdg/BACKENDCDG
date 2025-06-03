@@ -29,10 +29,19 @@ function configurarExpress() {
   
   // Middleware para cookies
   app.use(cookieParser());
-  
-  // Middleware para CORS (Cross-Origin Resource Sharing) - ATUALIZADO para cookies
+  // Middleware para CORS (Cross-Origin Resource Sharing) - ATUALIZADO para produção
   app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "http://localhost:5173"); // URL específica do frontend
+    const allowedOrigins = [
+      "http://localhost:5173", // Desenvolvimento local
+      "https://cdgproducao.onrender.com", // Frontend em produção no Render
+      "https://cdgapp.com.br" // Se você tiver um domínio personalizado
+    ];
+    
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+      res.header("Access-Control-Allow-Origin", origin);
+    }
+    
     res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     res.header("Access-Control-Allow-Credentials", "true"); // IMPORTANTE: permite cookies
@@ -43,7 +52,7 @@ function configurarExpress() {
     }
     
     next();
-  });  // Middleware para processar JSON (com limite aumentado para PDFs em base64 - 300MB)
+  });// Middleware para processar JSON (com limite aumentado para PDFs em base64 - 300MB)
   app.use(express.json({ limit: "300mb" }));
   
   // Middleware para processar dados URL-encoded (com limite aumentado - 300MB)
@@ -90,11 +99,11 @@ function configurarRotas(app) {
  */
 async function iniciarServidor(app) {
   try {
-    // Obtém a porta do arquivo
-    const PORT = process.env.API_PORT;
+    // Obtém a porta do ambiente (Render usa PORT, não API_PORT)
+    const PORT = process.env.PORT || process.env.API_PORT || 3000;
     
     // Inicia o servidor com timeout configurado
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`Servidor rodando na porta ${PORT}`);
     });
       // Configurar timeout do servidor para uploads grandes (5 minutos)

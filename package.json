@@ -1,11 +1,11 @@
 {
   "name": "systemcdg",
   "version": "1.0.0",
-  "main": "app.js",
-  "scripts": {
+  "main": "app.js",  "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "build": "npm install && npm run db:sync",
     "db:sync": "node ./scripts/syncDatabase.js",
     "db:reset": "node ./scripts/syncDatabase.js --force",
     "db:update": "node ./scripts/syncDatabase.js --alter",

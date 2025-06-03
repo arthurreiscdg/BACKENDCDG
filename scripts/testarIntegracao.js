@@ -14,10 +14,10 @@ const path = require('path');
 require('dotenv').config();
 
 // Configurações da API
-const API_HOST = 'localhost';
-const API_PORT = process.env.PORT || 3030;
+const API_HOST = process.env.API_HOST || 'localhost';
+const API_PORT = process.env.PORT || process.env.API_PORT || 3030;
 const API_PATH = '/api/integracao/pedidos';
-const API_KEY = process.env.INTEGRACAO_API_KEY;
+const API_KEY = process.env.INTEGRACAO_API_KEY || process.env.API_KEY;
 
 // Verifica se a chave de API está configurada
 if (!API_KEY) {
