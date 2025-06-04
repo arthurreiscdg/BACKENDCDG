@@ -25,6 +25,13 @@ const dbConfig = {
         } : false
       },
       logging: process.env.NODE_ENV === "development" ? console.log : false,
+      define: {
+        freezeTableName: true,
+        underscored: true,
+        timestamps: true,
+        createdAt: 'criado_em',
+        updatedAt: 'atualizado_em'
+      },
       pool: {
         max: 5,
         min: 0,
