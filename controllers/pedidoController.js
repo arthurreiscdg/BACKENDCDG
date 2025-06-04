@@ -257,7 +257,6 @@ const pedidoController = {
       res.status(500).json({ mensagem: "Erro interno no servidor" });
     }
   },
-
   // Atualizar status de múltiplos pedidos
   atualizarStatusLote: async (req, res) => {
     try {
@@ -270,53 +269,98 @@ const pedidoController = {
       if (!status_id) {
         return res.status(400).json({ mensagem: "ID do status é obrigatório" });
       }
-      
+
+      // Buscar o status para validação
+      const status = await StatusPedido.findByPk(status_id);
+      if (!status) {
+        return res.status(400).json({ mensagem: "Status não encontrado" });
+      }
+
       const resultados = [];
+      const erros = [];
+
+      console.log(`🔄 Iniciando atualização em lote para ${order_ids.length} pedido(s) - Status: ${status.nome}`);
       
       for (const orderId of order_ids) {
         try {
           const pedido = await Pedido.findByPk(orderId);
           
           if (!pedido) {
-            resultados.push({
-              pedido_id: orderId,
-              sucesso: false,
-              erro: "Pedido não encontrado"
-            });
+            erros.push(`Pedido ${orderId} não encontrado`);
             continue;
           }
-            // Registrar histórico
-          await HistoricoPedido.create({
-            pedido_id: orderId,
-            status_anterior_id: pedido.status_id,
-            status_novo_id: status_id,
-            usuario_id: req.usuario.id,
-            observacoes: "Status atualizado em lote",
-            tipo_acao: 'alteracao_status'
-          });
+
+          // ✅ NOVO FLUXO: Webhook PRIMEIRO, banco DEPOIS
+          console.log(`🔄 Enviando webhook para pedido ${orderId} antes de alterar status...`);
           
-          // Atualizar pedido
-          pedido.status_id = status_id;
-          await pedido.save();
-          
-          resultados.push({
-            pedido_id: orderId,
-            sucesso: true
-          });
+          try {
+            // ✅ 1. ENVIAR WEBHOOK PRIMEIRO
+            await webhookService.notificarAtualizacaoStatus(pedido, status_id);
+            console.log(`✅ Webhook enviado com sucesso para pedido ${orderId}`);
+            
+            // ✅ 2. SÓ AGORA ATUALIZAR NO BANCO LOCAL (com transação)
+            const transaction = await sequelize.transaction();
+            
+            try {
+              // Registrar histórico
+              await HistoricoPedido.create({
+                pedido_id: orderId,
+                status_anterior_id: pedido.status_id,
+                status_novo_id: status_id,
+                usuario_id: req.usuario.id,
+                observacoes: "Status atualizado em lote após confirmação webhook",
+                tipo_acao: 'alteracao_status'
+              }, { transaction });
+              
+              // Atualizar pedido
+              pedido.status_id = status_id;
+              await pedido.save({ transaction });
+              
+              // Confirmar transação
+              await transaction.commit();
+              
+              resultados.push({
+                pedido_id: orderId,
+                sucesso: true,
+                mensagem: "Status atualizado com sucesso após confirmação webhook"
+              });
+              
+              console.log(`✅ Status do pedido ${orderId} atualizado localmente após webhook confirmado`);
+              
+            } catch (dbError) {
+              await transaction.rollback();
+              throw new Error(`Erro no banco de dados: ${dbError.message}`);
+            }
+            
+          } catch (webhookError) {
+            // ❌ Se webhook falhou, NÃO atualizar o banco
+            console.error(`❌ Falha no webhook para pedido ${orderId}:`, webhookError.message);
+            erros.push(`Pedido ${orderId}: Falha na comunicação com servidor externo - ${webhookError.message}`);
+          }
           
         } catch (error) {
-          resultados.push({
-            pedido_id: orderId,
-            sucesso: false,
-            erro: error.message
-          });
+          console.error(`❌ Erro geral no pedido ${orderId}:`, error.message);
+          erros.push(`Pedido ${orderId}: ${error.message}`);
         }
       }
-      
-      res.json({
-        mensagem: "Atualização em lote concluída",
-        resultados: resultados
-      });
+
+      // Resposta final
+      const response = {
+        resultados,
+        total_processados: order_ids.length,
+        sucessos: resultados.length,
+        falhas: erros.length
+      };
+
+      if (erros.length > 0) {
+        response.erros = erros;
+      }
+
+      const statusCode = erros.length === order_ids.length ? 500 : 
+                        erros.length > 0 ? 207 : 200; // 207 = Multi-Status
+
+      console.log(`📊 Resultado final: ${resultados.length} sucessos, ${erros.length} falhas`);
+      res.status(statusCode).json(response);
       
     } catch (error) {
       console.error("Erro na atualização em lote:", error);

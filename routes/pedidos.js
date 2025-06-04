@@ -52,11 +52,11 @@ function definirRotasManipulacao(router) {
   // Criar um novo pedido (admin, dev, gerente, usuário)
   router.post("/", verificarRole(['admin', 'dev', 'gerente', 'usuario']), pedidoController.criarPedido);
   
-  // Atualizar um pedido (admin, dev, gerente)
-  router.put("/:id", verificarRole(['admin', 'dev', 'gerente']), pedidoController.atualizarPedido);
-  
   // Atualização em lote de status de pedidos
   router.put("/bulk-update-status", verificarRole(['admin', 'dev', 'gerente']), pedidoController.atualizarStatusLote);
+  
+  // Atualizar um pedido (admin, dev, gerente)
+  router.put("/:id", verificarRole(['admin', 'dev', 'gerente']), pedidoController.atualizarPedido);
   
   // Gerar PDF de pedidos
   router.post("/download-pdf", verificarPermissaoPedido, pedidoController.gerarPdfPedidos);
