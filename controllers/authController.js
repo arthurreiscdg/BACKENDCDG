@@ -8,46 +8,70 @@ const jwtService = require("../auth/jwtService");
 const authController = {
   /**
    * Realiza o login do usuário
-   * @param {Object} req - Objeto de requisição Express
-   * @param {Object} res - Objeto de resposta Express
-   */  login: async (req, res) => {
+   */
+  login: async (req, res) => {
     console.log(`[AUTH] Login solicitado para:`, req.body?.username || req.body?.email);
     try {
       const { username, password } = req.body;
-
-      if (!validarCamposLogin(username, password)) {
-        return res.status(400).json({ mensagem: "Username/email e senha são obrigatórios" });
+      
+      if (!username || !password) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Username/email e senha são obrigatórios" 
+        });
       }
 
-      const usuario = await buscarUsuarioPorUsernameOuEmail(username);
+      const { Op } = require('sequelize');
+      const usuario = await Usuario.findOne({ 
+        where: { 
+          [Op.or]: [
+            { username: username },
+            { email: username }
+          ]
+        } 
+      });
+      
+      console.log(`[AUTH] Usuário encontrado:`, usuario ? 'SIM' : 'NÃO');
       
       if (!usuario) {
-        return res.status(401).json({ mensagem: "Credenciais inválidas" });
+        console.log(`[AUTH] Retornando erro: Credenciais inválidas`);
+        return res.status(401).json({ 
+          success: false,
+          message: "Credenciais inválidas" 
+        });
       }
 
       if (!usuario.is_ativo) {
-        return res.status(401).json({ mensagem: "Usuário desativado. Entre em contato com o administrador" });
+        console.log(`[AUTH] Usuário desativado`);
+        return res.status(401).json({ 
+          success: false,
+          message: "Usuário desativado. Entre em contato com o administrador" 
+        });
       }
 
-      const senhaCorreta = await verificarSenha(password, usuario.senha_hash);
+      const senhaCorreta = await bcrypt.compare(password, usuario.senha_hash);
+      console.log(`[AUTH] Senha correta:`, senhaCorreta ? 'SIM' : 'NÃO');
       
       if (!senhaCorreta) {
-        return res.status(401).json({ mensagem: "Credenciais inválidas" });
-      }      const token = jwtService.gerarToken(usuario);
-      const usuarioInfo = formatarDadosUsuario(usuario);
+        console.log(`[AUTH] Retornando erro: Senha incorreta`);
+        return res.status(401).json({ 
+          success: false,
+          message: "Credenciais inválidas" 
+        });
+      }
 
-      // Define o cookie com o token (HTTPOnly e seguro)
-      // Configuração ajustada para funcionar com CORS
+      const token = jwtService.gerarToken(usuario);
+      
+      // Configuração de cookies para produção e desenvolvimento
       const cookieOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // HTTPS em produção
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' para CORS em produção
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 24 horas
       };
 
-      // Em produção (Render), ajustar para CORS
       if (process.env.NODE_ENV === 'production') {
-        cookieOptions.secure = true; // Obrigatório com sameSite: 'none'
+        cookieOptions.secure = true;
         cookieOptions.sameSite = 'none';
       }
 
@@ -55,87 +79,133 @@ const authController = {
 
       res.json({
         token,
-        usuario: usuarioInfo,
+        usuario: {
+          id: usuario.id,
+          nome: usuario.nome,
+          username: usuario.username,
+          email: usuario.email,
+          is_admin: usuario.is_admin,
+          roles: usuario.roles || [],
+          escola_id: usuario.escola_id,
+          metadados: usuario.metadados || {},
+          role: usuario.is_admin ? 'admin' : (usuario.roles && usuario.roles.length > 0 ? usuario.roles[0] : 'usuario')
+        },
         success: true
       });
     } catch (error) {
-      tratarErroInterno(error, res, "Erro no login");
+      console.error("Erro no login:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Erro interno no servidor" 
+      });
     }
   },
 
   /**
    * Registra um novo usuário
-   * @param {Object} req - Objeto de requisição Express
-   * @param {Object} res - Objeto de resposta Express
    */
   registro: async (req, res) => {
     console.log(`[AUTH] Registro solicitado para:`, req.body?.email);
     try {
       const { nome, email, senha, is_admin = false } = req.body;
-
-      if (!validarCamposRegistro(nome, email, senha)) {
-        return res.status(400).json({ mensagem: "Nome, email e senha são obrigatórios" });
+      
+      if (!nome || !email || !senha) {
+        return res.status(400).json({ 
+          success: false,
+          message: "Nome, email e senha são obrigatórios" 
+        });
       }
 
-      const usuarioExistente = await buscarUsuarioPorEmail(email);
+      const usuarioExistente = await Usuario.findOne({ where: { email } });
       
       if (usuarioExistente) {
-        return res.status(400).json({ mensagem: "Este email já está em uso" });
+        return res.status(400).json({ 
+          success: false,
+          message: "Este email já está em uso" 
+        });
       }
 
-      const senha_hash = await gerarHashSenha(senha);
-      const novoUsuario = await criarNovoUsuario({ nome, email, senha_hash, is_admin });
+      const saltRounds = 10;
+      const senha_hash = await bcrypt.hash(senha, saltRounds);
+      const novoUsuario = await Usuario.create({ nome, email, senha_hash, is_admin });
       
       const token = jwtService.gerarToken(novoUsuario);
-      const usuarioInfo = formatarDadosUsuario(novoUsuario);
 
       res.status(201).json({
         token,
-        usuario: usuarioInfo
+        usuario: {
+          id: novoUsuario.id,
+          nome: novoUsuario.nome,
+          username: novoUsuario.username,
+          email: novoUsuario.email,
+          is_admin: novoUsuario.is_admin,
+          roles: novoUsuario.roles || [],
+          escola_id: novoUsuario.escola_id,
+          role: novoUsuario.is_admin ? 'admin' : 'usuario'
+        }
       });
     } catch (error) {
-      tratarErroInterno(error, res, "Erro no registro");
+      console.error("Erro no registro:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Erro interno no servidor" 
+      });
     }
   },
+
   /**
    * Verifica se o token JWT é válido e retorna informações do usuário
-   * @param {Object} req - Objeto de requisição Express
-   * @param {Object} res - Objeto de resposta Express
-   */  verificarToken: async (req, res) => {
+   */
+  verificarToken: async (req, res) => {
     console.log(`[AUTH] Verificação de token para usuário ID:`, req.usuario?.id);
     try {
       const usuarioId = req.usuario.id;
-      const usuario = await buscarUsuarioPorId(usuarioId);
+      const usuario = await Usuario.findByPk(usuarioId, {
+        attributes: ['id', 'nome', 'username', 'email', 'is_admin', 'is_ativo', 'roles', 'escola_id', 'metadados']
+      });
       
       if (!usuario || !usuario.is_ativo) {
-        return res.status(401).json({ mensagem: "Usuário não encontrado ou desativado" });
+        return res.status(401).json({ 
+          success: false,
+          message: "Usuário não encontrado ou desativado" 
+        });
       }
       
-      const usuarioInfo = formatarDadosUsuario(usuario);
       res.json({ 
-        usuario: usuarioInfo,
+        usuario: {
+          id: usuario.id,
+          nome: usuario.nome,
+          username: usuario.username,
+          email: usuario.email,
+          is_admin: usuario.is_admin,
+          roles: usuario.roles || [],
+          escola_id: usuario.escola_id,
+          metadados: usuario.metadados || {},
+          role: usuario.is_admin ? 'admin' : (usuario.roles && usuario.roles.length > 0 ? usuario.roles[0] : 'usuario')
+        },
         success: true 
       });
     } catch (error) {
-      tratarErroInterno(error, res, "Erro na verificação do token");
+      console.error("Erro na verificação do token:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Erro interno no servidor" 
+      });
     }
   },
 
   /**
    * Realiza logout do usuário
-   * @param {Object} req - Objeto de requisição Express
-   * @param {Object} res - Objeto de resposta Express
-   */  logout: async (req, res) => {
+   */
+  logout: async (req, res) => {
     console.log(`[AUTH] Logout solicitado para usuário ID:`, req.usuario?.id);
     try {
-      // Limpa o cookie de autenticação com as mesmas configurações usadas no login
       const clearCookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
       };
 
-      // Em produção (Render), usar sameSite: 'none' para CORS
       if (process.env.NODE_ENV === 'production') {
         clearCookieOptions.secure = true;
         clearCookieOptions.sameSite = 'none';
@@ -148,148 +218,13 @@ const authController = {
         message: "Logout realizado com sucesso"
       });
     } catch (error) {
-      tratarErroInterno(error, res, "Erro no logout");
+      console.error("Erro no logout:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Erro interno no servidor" 
+      });
     }
   }
 };
-
-/**
- * Validação dos campos de login
- * @param {string} username - Username/email do usuário
- * @param {string} password - Senha do usuário
- * @returns {boolean} Verdadeiro se os campos são válidos
- */
-function validarCamposLogin(username, password) {
-  return username && password;
-}
-
-/**
- * Validação dos campos de registro
- * @param {string} nome - Nome do usuário
- * @param {string} email - Email do usuário
- * @param {string} senha - Senha do usuário
- * @returns {boolean} Verdadeiro se os campos são válidos
- */
-function validarCamposRegistro(nome, email, senha) {
-  return nome && email && senha;
-}
-
-/**
- * Busca um usuário pelo username ou email
- * @param {string} usernameOuEmail - Username ou email do usuário
- * @returns {Promise<Object>} Promessa com o usuário ou null
- */
-async function buscarUsuarioPorUsernameOuEmail(usernameOuEmail) {
-  const { Op } = require('sequelize');
-  return await Usuario.findOne({ 
-    where: { 
-      [Op.or]: [
-        { username: usernameOuEmail },
-        { email: usernameOuEmail }
-      ]
-    } 
-  });
-}
-
-/**
- * Busca um usuário pelo email
- * @param {string} email - Email do usuário
- * @returns {Promise<Object>} Promessa com o usuário ou null
- */
-async function buscarUsuarioPorEmail(email) {
-  return await Usuario.findOne({ where: { email } });
-}
-
-/**
- * Busca um usuário pelo ID
- * @param {number} id - ID do usuário
- * @returns {Promise<Object>} Promessa com o usuário ou null
- */
-async function buscarUsuarioPorId(id) {
-  return await Usuario.findByPk(id, {
-    attributes: ['id', 'nome', 'username', 'email', 'is_admin', 'is_ativo', 'roles', 'escola_id', 'metadados']
-  });
-}
-
-/**
- * Verifica se a senha fornecida corresponde ao hash armazenado
- * @param {string} senha - Senha fornecida
- * @param {string} hash - Hash armazenado
- * @returns {Promise<boolean>} Promessa com o resultado da verificação
- */
-async function verificarSenha(senha, hash) {
-  return await bcrypt.compare(senha, hash);
-}
-
-/**
- * Gera um hash para a senha
- * @param {string} senha - Senha a ser hashificada
- * @returns {Promise<string>} Promessa com o hash gerado
- */
-async function gerarHashSenha(senha) {
-  const saltRounds = 10;
-  return await bcrypt.hash(senha, saltRounds);
-}
-
-/**
- * Cria um novo usuário no banco de dados
- * @param {Object} dados - Dados do novo usuário
- * @returns {Promise<Object>} Promessa com o usuário criado
- */
-async function criarNovoUsuario(dados) {
-  return await Usuario.create(dados);
-}
-
-/**
- * Formata os dados do usuário para retorno na API
- * @param {Object} usuario - Objeto com dados do usuário
- * @returns {Object} Dados formatados
- */
-function formatarDadosUsuario(usuario) {
-  return {
-    id: usuario.id,
-    nome: usuario.nome,
-    username: usuario.username,
-    email: usuario.email,
-    is_admin: usuario.is_admin,
-    roles: usuario.roles || [],
-    escola_id: usuario.escola_id,
-    metadados: usuario.metadados || {},
-    role: determinarRolePrincipal(usuario)
-  };
-}
-
-/**
- * Determina o role principal do usuário para compatibilidade com o frontend
- * @param {Object} usuario - Objeto com dados do usuário
- * @returns {string} Role principal do usuário
- */
-function determinarRolePrincipal(usuario) {
-  if (usuario.is_admin) return 'admin';
-  
-  const roles = usuario.roles || [];
-  if (roles.length > 0) {
-    // Prioriza roles específicas de escola
-    const escolaRoles = ['zerohum', 'coleguium', 'elite', 'pensi'];
-    const escolaRole = roles.find(role => escolaRoles.includes(role));
-    if (escolaRole) return escolaRole;
-    
-    // Retorna a primeira role se não for de escola
-    return roles[0];
-  }
-  
-  return 'usuario';
-}
-
-/**
- * Trata erros internos do servidor
- * @param {Error} error - Objeto de erro
- * @param {Object} res - Objeto de resposta Express
- * @param {string} mensagemLog - Mensagem para o log
- */
-function tratarErroInterno(error, res, mensagemLog) {
-  console.error(`${mensagemLog}:`, error);
-  res.status(500).json({ mensagem: "Erro interno no servidor" });
-}
 
 module.exports = authController;
